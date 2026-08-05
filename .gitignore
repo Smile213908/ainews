@@ -18,3 +18,7 @@ out/
 Thumbs.db
 .vscode/
 .idea/
+
+# TS build info
+tsconfig.tsbuildinfo
+*.tsbuildinfo
