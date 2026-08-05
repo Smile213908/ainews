@@ -1,0 +1,39 @@
+# hot-monitor 2.0 开发依赖（M0）：PostgreSQL 16 + Redis 7
+# 应用服务（web/api/caddy）在 M4 接入同一文件（技术选型 §9.1）。
+#
+# 用法：docker compose up -d db redis
+# 本地无 Docker 时：backend 默认 DATABASE_URL=sqlite:///./dev.db 可直接开发。
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hotmonitor
+      POSTGRES_PASSWORD: hotmonitor
+      POSTGRES_DB: hotmonitor
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotmonitor"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]  # AOF 持久化（选型 §9.1）
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:
