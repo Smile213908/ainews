@@ -4,7 +4,7 @@ version = "2.0.0"
 description = "hot-monitor 2.0 backend — FastAPI + SQLModel"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi>=0.115",
+    "fastapi[standard]>=0.115",
     "sqlmodel>=0.0.22",
     "alembic>=1.13",
     "pydantic>=2.7",
@@ -42,6 +42,9 @@ ignore = [
     "RUF001", "RUF002", "RUF003",  # 中文标点（本项目注释/文档字符串为中文）
     "B008",  # FastAPI 惯用法：Depends/Query 在默认参数中
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/conftest.py" = ["E402"]  # 必须先在 import app 前设置环境变量
 
 [tool.mypy]
 python_version = "3.12"
