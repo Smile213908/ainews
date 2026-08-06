@@ -1,4 +1,6 @@
-"""同步搜索接口测试（FR-3.1）：Bing 命中 + Twitter 无 Key 跳过，结果不落库。"""
+"""异步搜索任务测试（FR-3.2）：提交 ≤1s 受理、轮询取结果、不落库、空词 422。"""
+
+import time
 
 import respx
 from fastapi.testclient import TestClient
@@ -17,25 +19,45 @@ BING_HTML = """
 """
 
 
-def test_search_aggregates_and_skips_db(client: TestClient):
+def test_search_async_task_lifecycle(client: TestClient):
     with respx.mock:
         respx.get("https://www.bing.com/search").mock(
             return_value=Response(200, text=BING_HTML)
         )
+        started = time.time()
         r = client.post("/api/search", json={"query": "Kimi"}, headers=AUTH)
-    assert r.status_code == 200
-    items = r.json()
-    assert len(items) == 1
-    assert items[0]["title"] == "Kimi 搜索结果一"
-    assert items[0]["ai_reviewed"] is True  # 降级 Provider 也产出分析字段
+        elapsed = time.time() - started
 
-    # 搜索结果不落库（FR-3.1 验收）
+        assert r.status_code == 202
+        assert elapsed < 1.0  # 提交受理 ≤1s（FR-3.2）
+        task_id = r.json()["task_id"]
+
+        # 轮询任务状态直到完成（mock 需覆盖后台任务执行期间）
+        result = None
+        for _ in range(50):
+            r = client.get(f"/api/search/{task_id}", headers=AUTH)
+            body = r.json()
+            if body["status"] in ("completed", "failed"):
+                result = body
+                break
+            time.sleep(0.1)
+
+    assert result is not None
+    assert result["status"] == "completed"
+    assert result["result"][0]["title"] == "Kimi 搜索结果一"
+    assert result["result"][0]["ai_reviewed"] is True
+
+    # 搜索结果不落库（FR-3.1）
     with Session(engine) as session:
         total = session.exec(select(func.count()).select_from(Hotspot)).one()
     assert total == 0
 
 
-def test_search_blank_query(client: TestClient):
+def test_search_blank_query_422(client: TestClient):
     r = client.post("/api/search", json={"query": "  "}, headers=AUTH)
-    assert r.status_code == 200
-    assert r.json() == []
+    assert r.status_code == 422
+
+
+def test_search_task_not_found(client: TestClient):
+    r = client.get("/api/search/nonexistent", headers=AUTH)
+    assert r.status_code == 404

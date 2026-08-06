@@ -13,12 +13,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401  确保表模型注册
 from app.config import get_settings
+from app.core.logging import setup_logging
 from app.core.redis import close_redis
 from app.core.scheduler import start_scheduler
 from app.db import init_db
 from app.deps import require_api_key
 from app.notify.ws import ws_manager
 from app.routers import control, hotspots, keywords, notifications, search, sources, system
+
+setup_logging()
 
 log = structlog.get_logger()
 

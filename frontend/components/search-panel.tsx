@@ -1,8 +1,8 @@
-/** 全网搜索面板（FR-3）：同步版，M4 改异步任务化。支持一键转监控（FR-3.4）。 */
+/** 全网搜索面板（FR-3，异步任务化）：提交 ≤1s 受理 → 轮询任务状态 → 展示结果。 */
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   IMPORTANCE_LABELS,
   IMPORTANCE_STYLES,
@@ -11,26 +11,55 @@ import {
   clientFetch,
 } from "@/lib/api";
 
+type TaskStatus = {
+  task_id: string;
+  status: "queued" | "running" | "completed" | "failed";
+  result?: SearchResultItem[] | null;
+  error?: string | null;
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  queued: "排队中…",
+  running: "正在聚合 Twitter + Bing 并送 AI 分析…",
+};
+
 export default function SearchPanel() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResultItem[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [task, setTask] = useState<TaskStatus | null>(null);
   const [converted, setConverted] = useState(false);
   const [sort, setSort] = useState<"default" | "relevance">("default");
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+  useEffect(() => stopPolling, []);
 
   const doSearch = async () => {
     if (!query.trim()) return;
-    setLoading(true);
+    stopPolling();
     setConverted(false);
-    try {
-      const data = await clientFetch<SearchResultItem[]>("/search", {
-        method: "POST",
-        body: JSON.stringify({ query: query.trim() }),
-      });
-      setResults(data);
-    } finally {
-      setLoading(false);
-    }
+    // ① 提交：立即返回 task_id（FR-3.2）
+    const submitted = await clientFetch<TaskStatus>("/search", {
+      method: "POST",
+      body: JSON.stringify({ query: query.trim() }),
+    });
+    setTask(submitted);
+    // ② 轮询任务状态
+    timerRef.current = setInterval(async () => {
+      try {
+        const current = await clientFetch<TaskStatus>(`/search/${submitted.task_id}`);
+        setTask(current);
+        if (current.status === "completed" || current.status === "failed") {
+          stopPolling();
+        }
+      } catch {
+        stopPolling();
+      }
+    }, 2000);
   };
 
   const convertToKeyword = async () => {
@@ -41,6 +70,7 @@ export default function SearchPanel() {
     setConverted(true);
   };
 
+  const results = task?.result ?? null;
   const sorted =
     sort === "relevance"
       ? [...(results ?? [])].sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0))
@@ -63,17 +93,26 @@ export default function SearchPanel() {
         />
         <button
           type="submit"
-          disabled={loading || !query.trim()}
+          disabled={!query.trim() || task?.status === "running" || task?.status === "queued"}
           className="rounded-lg bg-[var(--accent)] px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
         >
-          {loading ? "搜索中…" : "全网搜索"}
+          全网搜索
         </button>
       </form>
 
-      {results && (
+      {task && (task.status === "queued" || task.status === "running") && (
+        <p className="text-sm text-[var(--muted)]">
+          ⏳ {STATUS_LABELS[task.status]}
+        </p>
+      )}
+      {task?.status === "failed" && (
+        <p className="text-sm text-red-400">搜索失败：{task.error}</p>
+      )}
+
+      {task?.status === "completed" && results && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-[var(--muted)]">
-            共 {results.length} 条结果（Twitter + Bing 聚合，前 10 条附 AI 分析）
+            共 {results.length} 条结果（前 10 条附 AI 分析）
           </p>
           <div className="flex gap-2">
             <select
@@ -136,7 +175,7 @@ export default function SearchPanel() {
         ))}
       </div>
 
-      {results?.length === 0 && (
+      {task?.status === "completed" && results?.length === 0 && (
         <p className="py-12 text-center text-sm text-[var(--muted)]">
           没有找到相关内容，换个关键词试试
         </p>

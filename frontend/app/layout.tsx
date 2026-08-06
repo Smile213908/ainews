@@ -35,6 +35,12 @@ export default function RootLayout({
               >
                 全网搜索
               </Link>
+              <Link
+                href="/sources"
+                className="text-[var(--muted)] hover:text-[var(--foreground)]"
+              >
+                源健康
+              </Link>
             </nav>
           </header>
           <div

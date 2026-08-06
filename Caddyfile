@@ -1,0 +1,17 @@
+# Caddy 反代（技术选型 §9.2）：/ → web，/api、/ws → api，自动 HTTPS
+#
+# 本地 HTTP 部署把第一行改为 :80 即可。
+
+{$DOMAIN::80}
+
+handle /api/* {
+	reverse_proxy api:8000
+}
+
+handle /ws {
+	reverse_proxy api:8000
+}
+
+handle {
+	reverse_proxy web:3000
+}
