@@ -18,7 +18,7 @@ from app.core.scheduler import start_scheduler
 from app.db import init_db
 from app.deps import require_api_key
 from app.notify.ws import ws_manager
-from app.routers import control, hotspots, keywords, notifications, sources, system
+from app.routers import control, hotspots, keywords, notifications, search, sources, system
 
 log = structlog.get_logger()
 
@@ -46,7 +46,14 @@ app.add_middleware(
 )
 
 # 全部业务 API 走鉴权（FR-7.1）；仅 /api/health 与 /docs 开放（探针与契约调试）
-for r in (keywords.router, hotspots.router, notifications.router, sources.router, control.router):
+for r in (
+    keywords.router,
+    hotspots.router,
+    notifications.router,
+    sources.router,
+    control.router,
+    search.router,
+):
     app.include_router(r, prefix="/api", dependencies=[Depends(require_api_key)])
 app.include_router(system.router, prefix="/api")
 
