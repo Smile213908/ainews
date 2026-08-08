@@ -1,42 +1,45 @@
-"""手动触发全量检查（FR-7.3 / R-102）。
+"""手动触发检查（FR-7.3 / R-102）。
 
-- 锁空闲：后台启动一轮检查，立即返回 run_id；
-- 锁占用：返回 409 + 当前进度（正在处理第 N/M 个关键词）。
+- POST /check-hotspots：全量检查；POST /keywords/{id}/check：单关键词立即检查；
+- 锁空闲：后台启动，立即返回受理；锁占用：409 + 当前进度。
 """
 
 import asyncio
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from app.db import get_session
 from app.models import Setting
-from app.pipeline.hotspot_check import progress, run_hotspot_check
+from app.pipeline.hotspot_check import progress, run_hotspot_check, run_single_keyword_check
 from app.pipeline.settings_repo import DEFAULTS, set_setting
 
 router = APIRouter(tags=["control"])
 
+_background: set[asyncio.Task] = set()
 
-@router.post("/check-hotspots", status_code=202)
-async def trigger_check() -> dict:
-    if progress.running:
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "message": "检查进行中",
-                "progress": {
-                    "total_keywords": progress.total_keywords,
-                    "done_keywords": progress.done_keywords,
-                    "current_keyword": progress.current_keyword,
-                    "hotspots_created": progress.hotspots_created,
-                    "run_id": progress.run_id,
-                },
+
+def _conflict_409() -> HTTPException:
+    return HTTPException(
+        status_code=409,
+        detail={
+            "message": "检查进行中",
+            "progress": {
+                "total_keywords": progress.total_keywords,
+                "done_keywords": progress.done_keywords,
+                "current_keyword": progress.current_keyword,
+                "hotspots_created": progress.hotspots_created,
+                "run_id": progress.run_id,
             },
-        )
+        },
+    )
 
-    task = asyncio.create_task(run_hotspot_check(trigger="manual"))
-    # 等一个事件循环节拍确认锁抢到；未抢到说明竞态冲突
-    await asyncio.sleep(0)
+
+def _launch(coro) -> None:
+    task = asyncio.create_task(coro)
+    _background.add(task)
+    task.add_done_callback(_background.discard)
 
     def _log_result(t: asyncio.Task) -> None:
         if t.cancelled():
@@ -48,6 +51,30 @@ async def trigger_check() -> dict:
             structlog.get_logger().exception("manual_check_failed", error=str(exc))
 
     task.add_done_callback(_log_result)
+
+
+@router.post("/check-hotspots", status_code=202)
+async def trigger_check() -> dict:
+    if progress.running:
+        raise _conflict_409()
+    _launch(run_hotspot_check(trigger="manual"))
+    await asyncio.sleep(0)
+    return {"ok": True, "message": "检查已启动", "run_id": progress.run_id}
+
+
+@router.post("/keywords/{keyword_id}/check", status_code=202)
+async def trigger_keyword_check(
+    keyword_id: UUID, session: Session = Depends(get_session)
+) -> dict:
+    """单关键词立即检查：与全量检查共用锁，冲突返回 409 + 进度；关键词不存在返回 404。"""
+    from app.models import Keyword
+
+    if session.get(Keyword, keyword_id) is None:
+        raise HTTPException(status_code=404, detail="关键词不存在")
+    if progress.running:
+        raise _conflict_409()
+    _launch(run_single_keyword_check(keyword_id, trigger="manual"))
+    await asyncio.sleep(0)
     return {"ok": True, "message": "检查已启动", "run_id": progress.run_id}
 
 

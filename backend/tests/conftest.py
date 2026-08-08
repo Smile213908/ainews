@@ -13,6 +13,14 @@ if os.path.exists(_tmp_db):
 
 os.environ["API_KEYS"] = "test-key"
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp_db}"
+# 测试必须可重复、不依赖本地 .env 里的真实凭据：
+# 置空后 AI 走 DegradedProvider、Twitter 走未配置降级，绝不对公网发起真实请求。
+os.environ["OPENROUTER_API_KEY"] = ""
+os.environ["TWITTER_API_KEY"] = ""
+os.environ["SMTP_HOST"] = ""
+os.environ["SMTP_USER"] = ""
+os.environ["SMTP_PASSWORD"] = ""
+os.environ["MAIL_TO"] = ""
 
 import pytest
 from fastapi.testclient import TestClient

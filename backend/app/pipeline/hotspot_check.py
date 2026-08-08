@@ -253,6 +253,63 @@ async def run_hotspot_check(trigger: str = "cron") -> dict:
     return result
 
 
+async def run_single_keyword_check(keyword_id, trigger: str = "manual") -> dict:
+    """单关键词立即检查：与全量检查共用同一把锁（R-102），抢不到返回冲突。"""
+    run_id = str(uuid.uuid4())
+    token = f"{run_id}:{trigger}"
+    if not await acquire_lock(LOCK_NAME, LOCK_TTL, token):
+        return {"ok": False, "conflict": True, "progress": progress.__dict__}
+
+    with Session(engine) as session:
+        kw = session.get(Keyword, keyword_id)
+    if not kw:
+        await release_lock(LOCK_NAME, token)
+        return {"ok": False, "not_found": True}
+
+    progress.running = True
+    progress.run_id = run_id
+    progress.total_keywords = 1
+    progress.done_keywords = 0
+    progress.hotspots_created = 0
+    progress.ai_calls = 0
+    progress.started_at = time.monotonic()
+
+    stop_watchdog = asyncio.Event()
+    watchdog_task = asyncio.create_task(_watchdog(token, stop_watchdog))
+    provider = _get_provider()
+    analyzer = AIAnalyzer(provider, concurrency=get_setting_int("ai_concurrency"))
+    started = time.time()
+    try:
+        log.info("single_check_started", run_id=run_id, keyword=kw.text)
+        report = await process_keyword(kw, provider, analyzer)
+        progress.done_keywords = 1
+        progress.ai_calls = analyzer.stats["calls"]
+    except Exception as e:
+        log.exception("single_check_failed", run_id=run_id, keyword=kw.text)
+        report = KeywordReport(keyword=kw.text, errors=[str(e)])
+    finally:
+        stop_watchdog.set()
+        watchdog_task.cancel()
+        await release_lock(LOCK_NAME, token)
+        progress.running = False
+        progress.current_keyword = None
+
+    log.info(
+        "single_check_completed",
+        run_id=run_id,
+        keyword=kw.text,
+        ai_calls=analyzer.stats["calls"],
+        hotspots=report.created,
+    )
+    return {
+        "ok": True,
+        "run_id": run_id,
+        "duration_seconds": round(time.time() - started, 1),
+        "ai_calls": analyzer.stats["calls"],
+        "report": report.__dict__,
+    }
+
+
 def _get_provider() -> AIProvider:
     from app.ai.provider import get_provider
 

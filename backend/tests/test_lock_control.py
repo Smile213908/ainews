@@ -85,3 +85,36 @@ def test_sources_health_api(client: TestClient, session: Session):
     assert r.status_code == 200
     sources = {s["source"] for s in r.json()}
     assert "hackernews" in sources
+
+
+def test_keyword_check_trigger(client: TestClient, session: Session, monkeypatch):
+    from app.models import Keyword
+    from app.routers import control
+
+    async def _dummy_check(keyword_id, trigger="manual"):
+        return {"ok": True, "hotspots_created": 0}
+
+    # 只测路由层（202/409/404），不真的启动后台采集任务，避免测试间互相干扰
+    monkeypatch.setattr(control, "run_single_keyword_check", _dummy_check)
+
+    kw = Keyword(text="单关键词测试", is_active=True)
+    session.add(kw)
+    session.commit()
+    session.refresh(kw)
+
+    r = client.post(f"/api/keywords/{kw.id}/check", headers=AUTH)
+    assert r.status_code == 202
+
+    # 关键词不存在 → 404
+    from uuid import uuid4
+
+    r = client.post(f"/api/keywords/{uuid4()}/check", headers=AUTH)
+    assert r.status_code == 404
+
+    # 锁占用时冲突 409
+    progress.running = True
+    try:
+        r = client.post(f"/api/keywords/{kw.id}/check", headers=AUTH)
+        assert r.status_code == 409
+    finally:
+        progress.running = False

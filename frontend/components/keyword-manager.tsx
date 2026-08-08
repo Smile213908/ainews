@@ -3,8 +3,10 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { KeywordRead, clientFetch, relativeTime } from "@/lib/api";
+
+type CheckStatus = { running: boolean; hotspots_created: number };
 
 export default function KeywordManager({ initialData }: { initialData: KeywordRead[] }) {
   const queryClient = useQueryClient();
@@ -12,6 +14,13 @@ export default function KeywordManager({ initialData }: { initialData: KeywordRe
   const [category, setCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [checkState, setCheckState] = useState<Record<string, string>>({});
+  const timers = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+
+  useEffect(() => {
+    const current = timers.current;
+    return () => Object.values(current).forEach(clearInterval);
+  }, []);
 
   const { data: keywords } = useQuery({
     queryKey: ["keywords"],
@@ -49,6 +58,37 @@ export default function KeywordManager({ initialData }: { initialData: KeywordRe
       invalidate();
     },
   });
+
+  /** 立即检查：触发后每 3s 轮询全局检查状态，结束后刷新计数并提示结果（FR-7.3） */
+  const startCheck = async (kw: KeywordRead) => {
+    setCheckState((s) => ({ ...s, [kw.id]: "检查中…" }));
+    try {
+      await clientFetch(`/keywords/${kw.id}/check`, { method: "POST" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setCheckState((s) => ({
+        ...s,
+        [kw.id]: msg.includes("返回 409") ? "已有检查进行中，稍后再试" : "触发失败，稍后再试",
+      }));
+      return;
+    }
+    timers.current[kw.id] = setInterval(async () => {
+      try {
+        const st = await clientFetch<CheckStatus>("/check-hotspots/status");
+        if (!st.running) {
+          clearInterval(timers.current[kw.id]);
+          delete timers.current[kw.id];
+          setCheckState((s) => ({
+            ...s,
+            [kw.id]: `完成，新增 ${st.hotspots_created} 条热点`,
+          }));
+          invalidate();
+        }
+      } catch {
+        /* 单次轮询失败忽略，下一轮重试 */
+      }
+    }, 3000);
+  };
 
   return (
     <div className="space-y-6">
@@ -114,9 +154,19 @@ export default function KeywordManager({ initialData }: { initialData: KeywordRe
               </div>
               <p className="mt-1 text-xs text-[var(--muted)]">
                 累计 {kw.hotspot_count} 条热点 · 创建于 {relativeTime(kw.created_at)}
+                {checkState[kw.id] && (
+                  <span className="ml-2 text-[var(--accent)]">{checkState[kw.id]}</span>
+                )}
               </p>
             </div>
             <div className="flex gap-2 text-xs">
+              <button
+                onClick={() => startCheck(kw)}
+                disabled={checkState[kw.id] === "检查中…"}
+                className="rounded-lg border border-[var(--accent)]/40 px-3 py-1.5 text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-40"
+              >
+                {checkState[kw.id] === "检查中…" ? "检查中…" : "立即检查"}
+              </button>
               <button
                 onClick={() => toggleMutation.mutate(kw.id)}
                 className="rounded-lg border border-[var(--card-border)] px-3 py-1.5 hover:border-[var(--accent)]/40"
