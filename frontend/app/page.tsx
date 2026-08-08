@@ -4,6 +4,7 @@
  */
 
 import { Suspense } from "react";
+import CheckTrigger from "@/components/check-trigger";
 import FilterSortBar from "@/components/filter-sort-bar";
 import HotspotFeed from "@/components/hotspot-feed";
 import NotificationBell from "@/components/notification-bell";
@@ -30,7 +31,10 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">热点信息流</h1>
-        <NotificationBell wsUrl={wsUrl()} />
+        <div className="flex items-center gap-4">
+          <CheckTrigger />
+          <NotificationBell wsUrl={wsUrl()} />
+        </div>
       </div>
       <StatsHero stats={stats} />
       <Suspense fallback={<p className="text-sm text-[var(--muted)]">加载筛选…</p>}>
