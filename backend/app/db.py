@@ -1,6 +1,7 @@
 """数据库引擎与会话（SQLModel / SQLAlchemy 2.0）。
 
-开发默认 SQLite（免 Docker 可跑通），CI 与生产通过 DATABASE_URL 指向 PostgreSQL 16。
+连接串由 app.config 统一装配：开发默认拼装到 docker compose 的 PostgreSQL 16，
+生产必须显式配置 DATABASE_URL；SQLite 仅用于测试与一次性迁移脚本的显式注入。
 """
 
 from collections.abc import Iterator
