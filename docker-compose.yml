@@ -8,15 +8,15 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: hotmonitor
+      POSTGRES_USER: ${DB_USER:-hotmonitor}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-hotmonitor}
-      POSTGRES_DB: hotmonitor
+      POSTGRES_DB: ${DB_NAME:-hotmonitor}
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hotmonitor"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
       timeout: 3s
       retries: 10
