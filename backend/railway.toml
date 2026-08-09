@@ -9,10 +9,15 @@
 #   API_KEYS            必填，API 凭据（逗号分隔）
 #   DATABASE_URL        postgresql+psycopg://...（挂 Postgres 插件后用引用变量拼装，
 #                       注意必须是 postgresql+psycopg:// 前缀，不能直接用插件自带的 postgresql://）
+#   PORT                必填=8000，与 Dockerfile CMD 的 ${PORT:-8000} 对应；
+#                       同时须在服务域名的 targetPort 显式填 8000（缺省代理 8080 会 502）
 #   OPENROUTER_API_KEY  可选，AI 分析；缺省走降级（R-207）
 #   TWITTER_API_KEY     可选
 #   SMTP_* / MAIL_TO    可选，邮件通知
 #   REDIS_URL           可选；单实例部署不配时自动退化为内存锁（R-102 降级）
+#
+# 注意：railway up 会把代码部署到"当前关联的服务"——项目里有数据库服务时
+# 务必先 railway link 到 API 服务再 up，否则会把应用构建进数据库服务并顶停数据库。
 
 [build]
 builder = "DOCKERFILE"
