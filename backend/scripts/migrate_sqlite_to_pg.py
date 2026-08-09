@@ -7,7 +7,7 @@
 用法：
     uv run python scripts/migrate_sqlite_to_pg.py \
         --source "sqlite:////path/to/1.0/dev.db" \
-        --target "postgresql+psycopg://user:pass@host:5432/hotmonitor"
+        --target "postgresql+psycopg://user:pass@host:5432/monitor"
 
 不传 --target 时默认使用当前 DATABASE_URL。
 """

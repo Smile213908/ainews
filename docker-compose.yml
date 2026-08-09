@@ -64,7 +64,7 @@ services:
     build: ./frontend
     environment:
       API_BASE_URL: http://api:8000
-      API_KEY: ${API_KEYS%%\,*}  # 取第一个 key，仅存服务端（BFF 转发）
+      API_KEY: ${WEB_API_KEY:?需在 .env 配置}  # 仅存服务端（BFF 转发）
     depends_on:
       - api
     restart: unless-stopped

@@ -44,15 +44,32 @@ docker compose --profile prod exec api \
 - 迁移自动回填 `hot_score` / `importance_rank` 预计算列
 - 建议先 `--dry-run` 看统计，原 SQLite 文件保留备份
 
-## 四、本地开发（无 Docker）
+## 四、本地开发
 
-```bash
-# 后端（SQLite + 内存锁降级，免任何依赖）
+数据连接双环境机制（`backend/app/config.py`）：
+
+- **APP_ENV=development（默认）**：不显式配 `DATABASE_URL` / `REDIS_URL` 时，由 `.env` 里的
+  `DB_*` / `REDIS_*` 组件字段自动拼装，默认指向 docker compose 拉起的 PG 16 + Redis 7；
+  连接已有的外部实例（含本机 Docker 已部署的）只改组件字段即可；显式完整 URL 始终优先。
+- **APP_ENV=production**：必须显式配置完整 `DATABASE_URL` / `REDIS_URL`，缺失即启动失败。
+
+启动三步：
+
+```powershell
+# 1. 拉起开发依赖（PostgreSQL 16 + Redis 7，自动创建持久卷，等待就绪）
+powershell -File scripts/dev-deps.ps1     # Linux/Mac: bash scripts/dev-deps.sh
+
+# 2. 后端（首次自动建表； backend/.env 参考 backend/.env.example）
 cd backend && uv sync && uv run fastapi dev app/main.py
 
-# 前端
+# 3. 前端
 cd frontend && npm install && npm run dev
 ```
+
+- 依赖停止：`docker compose stop db redis`；数据清空重来：`docker compose down -v`
+- 端口与本机已有实例冲突时，改 `.env` 的 `DB_PORT` / `REDIS_PORT`（compose 主机端口与后端拼装都读它）
+- 无 Docker 时仍可跑：`.env` 显式设 `DATABASE_URL=sqlite:///./dev.db`，
+  Redis 连不上自动降级为进程内内存锁/缓存（仅限开发自用，不代表生产行为）
 
 ## 五、运维要点
 
