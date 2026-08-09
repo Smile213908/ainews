@@ -46,6 +46,8 @@ class CheckProgress:
     hotspots_created: int = 0
     ai_calls: int = 0
     started_at: float = 0.0
+    # 本轮逐词报告（KeywordReport.__dict__），供前端进度弹窗展示已完成项
+    reports: list[dict] = field(default_factory=list)
 
 
 progress = CheckProgress()
@@ -54,6 +56,7 @@ progress = CheckProgress()
 @dataclass
 class KeywordReport:
     keyword: str
+    keyword_id: str = ""
     collected: int = 0
     candidates: int = 0
     analyzed: int = 0
@@ -135,7 +138,7 @@ def _to_hotspot(item: SearchResult, analysis, keyword: Keyword, ai_reviewed: boo
 
 
 async def process_keyword(kw: Keyword, provider: AIProvider, analyzer: AIAnalyzer) -> KeywordReport:
-    report = KeywordReport(keyword=kw.text)
+    report = KeywordReport(keyword=kw.text, keyword_id=str(kw.id))
     progress.current_keyword = kw.text
 
     # Stage 2：查询扩展（缓存 7 天，AI 不可用走规则法）
@@ -199,13 +202,14 @@ async def run_hotspot_check(trigger: str = "cron") -> dict:
     progress.hotspots_created = 0
     progress.ai_calls = 0
     progress.started_at = time.monotonic()
+    progress.reports = []
 
     stop_watchdog = asyncio.Event()
     watchdog_task = asyncio.create_task(_watchdog(token, stop_watchdog))
 
     provider = _get_provider()
     analyzer = AIAnalyzer(provider, concurrency=get_setting_int("ai_concurrency"))
-    reports: list[dict] = []
+    reports: list[dict] = progress.reports
     started = time.time()
     try:
         with Session(engine) as session:
@@ -220,7 +224,7 @@ async def run_hotspot_check(trigger: str = "cron") -> dict:
                 report = await process_keyword(kw, provider, analyzer)
             except Exception as e:
                 log.exception("keyword_failed", run_id=run_id, keyword=kw.text)
-                report = KeywordReport(keyword=kw.text, errors=[str(e)])
+                report = KeywordReport(keyword=kw.text, keyword_id=str(kw.id), errors=[str(e)])
             reports.append(report.__dict__)
             progress.done_keywords += 1
             progress.ai_calls = analyzer.stats["calls"]
@@ -273,6 +277,7 @@ async def run_single_keyword_check(keyword_id, trigger: str = "manual") -> dict:
     progress.hotspots_created = 0
     progress.ai_calls = 0
     progress.started_at = time.monotonic()
+    progress.reports = []
 
     stop_watchdog = asyncio.Event()
     watchdog_task = asyncio.create_task(_watchdog(token, stop_watchdog))
@@ -286,8 +291,9 @@ async def run_single_keyword_check(keyword_id, trigger: str = "manual") -> dict:
         progress.ai_calls = analyzer.stats["calls"]
     except Exception as e:
         log.exception("single_check_failed", run_id=run_id, keyword=kw.text)
-        report = KeywordReport(keyword=kw.text, errors=[str(e)])
+        report = KeywordReport(keyword=kw.text, keyword_id=str(kw.id), errors=[str(e)])
     finally:
+        progress.reports.append(report.__dict__)
         stop_watchdog.set()
         watchdog_task.cancel()
         await release_lock(LOCK_NAME, token)

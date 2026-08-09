@@ -54,6 +54,30 @@ def test_manual_trigger_and_status(client: TestClient):
     assert "running" in r.json()
 
 
+def test_status_includes_reports(client: TestClient):
+    """进度弹窗契约：status 返回本轮逐词报告（含 keyword_id 供点击查看）。"""
+    progress.reports = [
+        {
+            "keyword": "AI",
+            "keyword_id": "00000000-0000-0000-0000-000000000001",
+            "collected": 10,
+            "candidates": 5,
+            "analyzed": 4,
+            "created": 2,
+            "errors": [],
+        }
+    ]
+    try:
+        r = client.get("/api/check-hotspots/status", headers=AUTH)
+        assert r.status_code == 200
+        body = r.json()
+        assert body["reports"][0]["keyword"] == "AI"
+        assert body["reports"][0]["keyword_id"]
+        assert body["reports"][0]["created"] == 2
+    finally:
+        progress.reports = []
+
+
 def test_manual_trigger_conflict_409(client: TestClient):
     progress.running = True
     progress.total_keywords = 5

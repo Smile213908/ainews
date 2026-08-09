@@ -88,6 +88,8 @@ def check_status() -> dict:
         "current_keyword": progress.current_keyword,
         "hotspots_created": progress.hotspots_created,
         "ai_calls": progress.ai_calls,
+        # 本轮逐词报告：进度弹窗展示已完成关键词及各自新增热点数（含 keyword_id 供点击查看）
+        "reports": progress.reports,
     }
 
 
