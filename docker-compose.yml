@@ -1,11 +1,8 @@
 # hot-monitor 2.0 全栈编排（技术选型 §9.1）
 #
-# 【方案 A · 自托管】本文件即方案 A 的全部编排，长期保留可用：
-#   开发（仅依赖）：docker compose up -d db redis
-#   全栈部署：      docker compose --profile prod up -d --build
-#                   （环境变量见根目录 .env，参考 .env.example）
-# 【方案 B · 云端】当前线上部署走 Railway（后端，见 backend/railway.toml）
-#   + Vercel（前端）。方案 B 不读取本文件；切回自托管时直接按上方命令使用即可。
+# 开发（仅依赖）：docker compose up -d db redis
+# 全栈部署：      docker compose --profile prod up -d --build
+#                 （环境变量见根目录 .env，参考 .env.example）
 
 services:
   db:

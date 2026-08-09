@@ -10,6 +10,3 @@ out/
 
 # misc
 *.tsbuildinfo
-
-.vercel
-.env*
