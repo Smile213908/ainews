@@ -41,8 +41,9 @@ services:
       API_KEYS: ${API_KEYS:?需在 .env 配置}
       DATABASE_URL: postgresql+psycopg://hotmonitor:${DB_PASSWORD:-hotmonitor}@db:5432/hotmonitor
       REDIS_URL: redis://redis:6379/0
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      AI_MODEL: ${AI_MODEL:-deepseek/deepseek-v3.2}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
       TWITTER_API_KEY: ${TWITTER_API_KEY:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-465}

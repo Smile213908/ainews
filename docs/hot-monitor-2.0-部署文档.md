@@ -8,7 +8,7 @@
 |---|---|---|
 | API_KEYS | **必填** | 后端拒绝启动并明确报错 |
 | Docker + Docker Compose | 部署必需 | — |
-| OPENROUTER_API_KEY | 可选 | AI 分析走降级模式，界面标注"未经 AI 审核"（R-207） |
+| AI_API_KEY（+AI_BASE_URL/AI_MODEL） | 可选 | AI 分析走降级模式，界面标注"未经 AI 审核"（R-207）；OpenAI 兼容三元组，默认接官方 |
 | TWITTER_API_KEY | 可选 | Twitter 源跳过（SourceHealth 不计故障） |
 | SMTP_* / MAIL_TO | 可选 | 邮件静默跳过，不影响主流程（FR-5.1） |
 

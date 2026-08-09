@@ -1,5 +1,7 @@
-"""AI Provider 抽象（技术选型 §7）：OpenRouter 实现 + 降级实现（R-207）。
+"""AI Provider 抽象（技术选型 §7）：OpenAI 兼容实现 + 降级实现（R-207）。
 
+接入方式：任意 OpenAI 兼容端点（官方 / DeepSeek / 通义 / OpenRouter / 自建 vLLM），
+换 Provider 只改 AI_BASE_URL + AI_API_KEY + AI_MODEL 三个环境变量，零代码改动。
 fallback 链：structured output → 正则提取 JSON → Pydantic 钳制 → 抛错进重试队列（R-205）。
 """
 
@@ -44,14 +46,14 @@ def _extract_json(text: str) -> dict:
         raise AIError(f"JSON 解析失败: {e}") from e
 
 
-class OpenRouterProvider:
-    """OpenAI SDK 指向 OpenRouter（ADR-6）：换 Provider 只改 base_url + key。"""
+class OpenAICompatProvider:
+    """OpenAI SDK 指向任意兼容端点（ADR-6）：换 Provider 只改 base_url + key + model。"""
 
     def __init__(self) -> None:
         settings = get_settings()
         self._client = AsyncOpenAI(
-            api_key=settings.openrouter_api_key,
-            base_url=settings.openrouter_base_url,
+            api_key=settings.ai_api_key,
+            base_url=settings.ai_base_url,
             timeout=60.0,
         )
         self._model = settings.ai_model
@@ -143,7 +145,7 @@ def rule_based_expand(keyword: str) -> list[str]:
 
 def get_provider() -> AIProvider:
     settings = get_settings()
-    if settings.openrouter_api_key:
-        return OpenRouterProvider()
+    if settings.ai_api_key:
+        return OpenAICompatProvider()
     log.warning("ai_not_configured_degraded_mode")
     return DegradedProvider()

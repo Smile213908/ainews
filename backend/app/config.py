@@ -22,10 +22,11 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./dev.db"
     redis_url: str = "redis://localhost:6379/0"
 
-    # AI（OpenRouter 兼容接口），M2 流水线使用
-    openrouter_api_key: str | None = None
-    openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    ai_model: str = "deepseek/deepseek-v3.2"
+    # AI（OpenAI 兼容接口）：base_url + key + model 三元组，M2 流水线使用。
+    # 默认接 OpenAI 官方；换 DeepSeek/通义/OpenRouter/自建 vLLM 只改这三个变量。
+    ai_base_url: str = "https://api.openai.com/v1"
+    ai_api_key: str | None = None
+    ai_model: str = "gpt-4o-mini"
 
     # Twitter 第三方 API（twitterapi.io）
     twitter_api_key: str | None = None
