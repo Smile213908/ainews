@@ -65,16 +65,28 @@ class OpenAICompatProvider:
                 "type": "json_schema",
                 "json_schema": json_schema,
             }
-        try:
-            resp = await self._client.chat.completions.create(
+
+        async def _create(**extra):
+            return await self._client.chat.completions.create(
                 model=self._model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=TEMPERATURE,
                 max_tokens=max_tokens,
+                **extra,
                 **kwargs,
             )
+
+        try:
+            resp = await _create(temperature=TEMPERATURE)
         except Exception as e:
-            raise AIError(f"AI 调用失败: {e}") from e
+            # 部分模型（如 kimi k3、o1 系列）锁定 temperature，显式传参会 400：
+            # 去掉该参数用模型默认值重试一次（R-205 之外的兼容性兜底）
+            if "temperature" not in str(e).lower():
+                raise AIError(f"AI 调用失败: {e}") from e
+            log.warning("ai_temperature_unsupported_fallback", model=self._model)
+            try:
+                resp = await _create()
+            except Exception as e2:
+                raise AIError(f"AI 调用失败: {e2}") from e2
         return resp.choices[0].message.content or ""
 
     async def analyze(self, *, title: str, content: str, source: str, keyword: str,

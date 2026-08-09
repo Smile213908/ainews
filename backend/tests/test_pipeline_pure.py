@@ -1,9 +1,12 @@
 """pipeline 纯函数测试：清洗（R-105/106）、配额（R-202）、阈值（R-204）、扩展降级（R-201）。"""
 
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
+
+import pytest
 
 from app.ai.expand import prematch_variants
-from app.ai.provider import rule_based_expand
+from app.ai.provider import AIError, OpenAICompatProvider, rule_based_expand
 from app.ai.rules import passes_threshold
 from app.ai.schemas import AIAnalysis
 from app.collectors.base import SearchResult
@@ -78,3 +81,53 @@ def test_prematch_variants():
 def test_analysis_clamp():
     a = AIAnalysis.model_validate({"relevance": 150, "importance": "low"})
     assert a.relevance == 100
+
+
+# ---------- Provider：temperature 兼容性兜底（kimi k3 / o1 等锁定参数的模型） ----------
+
+
+def _mk_provider(completions):
+    """绕开 __init__（避免构造真实 SDK 客户端），直接注入假 client。"""
+    provider = OpenAICompatProvider.__new__(OpenAICompatProvider)
+    provider._client = SimpleNamespace(chat=SimpleNamespace(completions=completions))
+    provider._model = "test-model"
+    return provider
+
+
+class _TempLockedCompletions:
+    """模拟 k3-256k：显式传 temperature 直接 400"""
+
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    async def create(self, **kwargs):
+        self.calls.append(kwargs)
+        if "temperature" in kwargs:
+            raise Exception("invalid temperature: only 1 is allowed for this model")
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content='{"ok":true}'))]
+        )
+
+
+async def test_temperature_locked_model_fallback():
+    fake = _TempLockedCompletions()
+    provider = _mk_provider(fake)
+
+    out = await provider._chat("测试", max_tokens=100, json_schema=None)
+
+    assert out == '{"ok":true}'
+    assert len(fake.calls) == 2  # 第一次带 temperature 被拒，第二次不带成功
+    assert "temperature" in fake.calls[0]
+    assert "temperature" not in fake.calls[1]
+
+
+class _AlwaysFailCompletions:
+    async def create(self, **kwargs):
+        raise Exception("connection refused")
+
+
+async def test_non_temperature_error_raises_aierror():
+    provider = _mk_provider(_AlwaysFailCompletions())
+
+    with pytest.raises(AIError):
+        await provider._chat("测试", max_tokens=100, json_schema=None)
