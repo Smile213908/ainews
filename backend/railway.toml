@@ -1,0 +1,23 @@
+# 方案 B：Railway 部署配置（方案 A 自托管见根目录 docker-compose.yml，两者互不影响）
+#
+# 使用方式：
+#   cd backend
+#   railway link          # 关联 Railway 项目（首次）
+#   railway up            # 用本目录 Dockerfile 构建并部署
+#
+# 需在 Railway 项目变量中配置（可参考 .env.example）：
+#   API_KEYS            必填，API 凭据（逗号分隔）
+#   DATABASE_URL        postgresql+psycopg://...（挂 Postgres 插件后用引用变量拼装，
+#                       注意必须是 postgresql+psycopg:// 前缀，不能直接用插件自带的 postgresql://）
+#   OPENROUTER_API_KEY  可选，AI 分析；缺省走降级（R-207）
+#   TWITTER_API_KEY     可选
+#   SMTP_* / MAIL_TO    可选，邮件通知
+#   REDIS_URL           可选；单实例部署不配时自动退化为内存锁（R-102 降级）
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# 单副本：检查流水线靠分布式锁防并发，多副本需另配 Redis（见上方 REDIS_URL 说明）
+numReplicas = 1
