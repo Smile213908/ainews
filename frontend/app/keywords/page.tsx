@@ -9,9 +9,10 @@ export default async function KeywordsPage() {
   const keywords = await serverFetch<KeywordRead[]>("/api/keywords");
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 px-6 py-8">
+    <main className="mx-auto w-full max-w-5xl space-y-6 px-8 py-8">
       <div>
-        <h1 className="text-2xl font-bold">关键词管理</h1>
+        <p className="cyber-label">Keyword Matrix // Watchlist</p>
+        <h1 className="neon-text mt-1 text-3xl font-bold tracking-wide">关键词管理</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
           系统每 30 分钟对所有「监控中」的关键词执行一轮全网检查
         </p>

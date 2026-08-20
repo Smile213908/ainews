@@ -4,9 +4,10 @@ import SearchPanel from "@/components/search-panel";
 
 export default function SearchPage() {
   return (
-    <main className="mx-auto max-w-4xl space-y-6 px-6 py-8">
+    <main className="mx-auto w-full max-w-5xl space-y-6 px-8 py-8">
       <div>
-        <h1 className="text-2xl font-bold">全网搜索</h1>
+        <p className="cyber-label">Deep Scan // Ad-hoc Query</p>
+        <h1 className="neon-text mt-1 text-3xl font-bold tracking-wide">全网搜索</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
           临时搜一个还没监控的关键词，Twitter + Bing 聚合并附 AI 判断
         </p>

@@ -70,14 +70,17 @@ export default function CheckProgressModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-[var(--card-border)] bg-[var(--card)] shadow-2xl"
+        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-[var(--accent)]/25 bg-[rgba(6,10,22,0.95)] shadow-[0_0_56px_rgba(0,229,255,0.18)] backdrop-blur-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 头部 */}
         <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-4">
-          <h2 className="text-base font-semibold">
-            {running ? "热点检查进行中" : "本轮检查完成"}
-          </h2>
+          <div>
+            <p className="cyber-label">{running ? "Scanning //" : "Complete //"}</p>
+            <h2 className="neon-text mt-0.5 text-base font-semibold">
+              {running ? "热点检查进行中" : "本轮检查完成"}
+            </h2>
+          </div>
           <button
             onClick={onClose}
             className="rounded-lg px-2 py-1 text-lg leading-none text-[var(--muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)]"
@@ -100,7 +103,7 @@ export default function CheckProgressModal({
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--background)]">
             <div
-              className="h-full rounded-full bg-[var(--accent)] transition-all duration-500"
+              className="h-full rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--accent-glow)] transition-all duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -132,7 +135,7 @@ export default function CheckProgressModal({
                 {r.keyword_id && (
                   <button
                     onClick={() => viewKeyword(r.keyword_id)}
-                    className="shrink-0 rounded-md border border-[var(--accent)]/40 px-2 py-0.5 text-xs text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                    className="neon-btn shrink-0 rounded-md px-2 py-0.5 text-xs"
                   >
                     查看
                   </button>

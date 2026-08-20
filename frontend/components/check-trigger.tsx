@@ -117,9 +117,9 @@ export default function CheckTrigger() {
       <button
         onClick={trigger}
         disabled={running}
-        className="rounded-lg border border-[var(--accent)]/40 px-4 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-40"
+        className="neon-btn rounded-lg px-4 py-2 text-sm font-medium"
       >
-        {running ? "检查中…" : "立即检查"}
+        {running ? "◉ 检查中…" : "⚡ 立即检查"}
       </button>
       {modalOpen && (
         <CheckProgressModal status={status} onClose={() => setModalOpen(false)} />

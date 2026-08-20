@@ -45,19 +45,19 @@ export default function NotificationBell({ wsUrl }: { wsUrl: string }) {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative rounded-lg border border-[var(--card-border)] p-2 hover:border-[var(--accent)]/40"
+        className="neon-btn relative rounded-lg p-2"
         aria-label="通知"
       >
         🔔
         {(unread?.unread ?? 0) > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--neon-pink)] px-1 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(255,45,120,0.6)]">
             {unread!.unread > 99 ? "99+" : unread!.unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 z-40 w-96 rounded-xl border border-[var(--card-border)] bg-[var(--card)] shadow-xl">
+        <div className="absolute right-0 top-12 z-40 w-96 rounded-xl border border-[var(--card-border)] bg-[rgba(6,10,22,0.95)] shadow-[0_0_32px_rgba(0,229,255,0.15)] backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-[var(--card-border)] px-4 py-3">
             <span className="text-sm font-semibold">通知中心</span>
             <button onClick={markAll} className="text-xs text-[var(--accent)] hover:underline">

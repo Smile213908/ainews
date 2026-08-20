@@ -44,10 +44,10 @@ export default function SourceHealthPanel({
         return (
           <div
             key={key}
-            className={`rounded-xl border p-5 ${
+            className={`cyber-panel rounded-xl p-5 ${
               failures >= 3
-                ? "border-red-500/40 bg-red-500/5"
-                : "border-[var(--card-border)] bg-[var(--card)]"
+                ? "!border-[rgba(255,45,120,0.45)] !bg-[rgba(255,45,120,0.06)] shadow-[0_0_24px_rgba(255,45,120,0.12)]"
+                : ""
             }`}
           >
             <div className="flex items-center justify-between">

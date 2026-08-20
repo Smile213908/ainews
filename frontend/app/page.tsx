@@ -28,9 +28,14 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">热点信息流</h1>
+    <main className="mx-auto w-full max-w-7xl space-y-6 px-8 py-8">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="cyber-label">Hotspot Radar // Realtime Feed</p>
+          <h1 className="neon-text mt-1 text-3xl font-bold tracking-wide">
+            热点信息流
+          </h1>
+        </div>
         <div className="flex items-center gap-4">
           <CheckTrigger />
           <NotificationBell wsUrl={wsUrl()} />

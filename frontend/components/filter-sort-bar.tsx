@@ -55,7 +55,7 @@ export default function FilterSortBar() {
   };
 
   const selectCls =
-    "rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-3 py-1.5 text-sm text-[var(--foreground)] focus:border-[var(--accent)] focus:outline-none";
+    "rounded-lg border border-[var(--card-border)] bg-[var(--card)] px-3 py-1.5 text-sm text-[var(--foreground)] transition-all hover:border-[var(--accent)]/40 focus:border-[var(--accent)] focus:shadow-[0_0_12px_var(--accent-glow)] focus:outline-none";
 
   return (
     <div className="flex flex-wrap items-center gap-2">

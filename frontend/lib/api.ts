@@ -68,9 +68,9 @@ export const SOURCE_LABELS: Record<string, string> = {
 };
 
 export const IMPORTANCE_STYLES: Record<string, string> = {
-  urgent: "bg-red-500/15 text-red-400 border-red-500/30",
-  high: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  medium: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  urgent: "bg-[rgba(255,45,120,0.12)] text-[var(--neon-pink)] border-[rgba(255,45,120,0.4)]",
+  high: "bg-[rgba(255,184,0,0.10)] text-[var(--neon-amber)] border-[rgba(255,184,0,0.35)]",
+  medium: "bg-[rgba(0,229,255,0.10)] text-[var(--accent)] border-[rgba(0,229,255,0.35)]",
   low: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 };
 

@@ -9,11 +9,11 @@ import {
   relativeTime,
 } from "@/lib/api";
 
-/** 热度等级标签颜色（爆/热/温，R-403：由后端归一化分值驱动） */
+/** 热度等级标签颜色（爆/热/温，R-403：由后端归一化分值驱动）—— 赛博霓虹配色 */
 const HOT_LEVEL_STYLES: Record<string, string> = {
-  爆: "bg-red-500/20 text-red-400",
-  热: "bg-orange-500/20 text-orange-400",
-  温: "bg-sky-500/15 text-sky-400",
+  爆: "bg-[rgba(255,45,120,0.15)] text-[var(--neon-pink)] shadow-[0_0_10px_rgba(255,45,120,0.25)]",
+  热: "bg-orange-500/15 text-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.2)]",
+  温: "bg-[rgba(0,229,255,0.12)] text-[var(--accent)] shadow-[0_0_10px_rgba(0,229,255,0.2)]",
 };
 
 export default function HotspotCard({
@@ -27,7 +27,7 @@ export default function HotspotCard({
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <article className="rounded-xl border border-[var(--card-border)] bg-[var(--card)] p-5 transition hover:border-[var(--accent)]/40">
+    <article className="cyber-panel rounded-xl p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span

@@ -114,7 +114,7 @@ export default function KeywordManager({ initialData }: { initialData: KeywordRe
         <button
           type="submit"
           disabled={createMutation.isPending || !text.trim()}
-          className="rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
+          className="neon-btn rounded-lg px-5 py-2 text-sm font-medium"
         >
           添加监控
         </button>
@@ -132,7 +132,7 @@ export default function KeywordManager({ initialData }: { initialData: KeywordRe
         {keywords?.map((kw) => (
           <div
             key={kw.id}
-            className="flex items-center justify-between rounded-xl border border-[var(--card-border)] bg-[var(--card)] p-4"
+            className="cyber-panel flex items-center justify-between rounded-xl p-4"
           >
             <div>
               <div className="flex items-center gap-2">
@@ -163,7 +163,7 @@ export default function KeywordManager({ initialData }: { initialData: KeywordRe
               <button
                 onClick={() => startCheck(kw)}
                 disabled={checkState[kw.id] === "检查中…"}
-                className="rounded-lg border border-[var(--accent)]/40 px-3 py-1.5 text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-40"
+                className="neon-btn rounded-lg px-3 py-1.5"
               >
                 {checkState[kw.id] === "检查中…" ? "检查中…" : "立即检查"}
               </button>

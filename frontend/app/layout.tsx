@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import "./globals.css";
+import NavSidebar from "@/components/nav-sidebar";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
@@ -15,43 +15,10 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body className="min-h-screen antialiased">
         <Providers>
-          <header className="sticky top-0 z-30 border-b border-[var(--card-border)] bg-[var(--background)]/80 backdrop-blur">
-            <nav className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3 text-sm">
-              <Link href="/" className="font-bold text-[var(--accent)]">
-                🔥 hot-monitor
-              </Link>
-              <Link href="/" className="text-[var(--muted)] hover:text-[var(--foreground)]">
-                热点信息流
-              </Link>
-              <Link
-                href="/keywords"
-                className="text-[var(--muted)] hover:text-[var(--foreground)]"
-              >
-                关键词管理
-              </Link>
-              <Link
-                href="/search"
-                className="text-[var(--muted)] hover:text-[var(--foreground)]"
-              >
-                全网搜索
-              </Link>
-              <Link
-                href="/sources"
-                className="text-[var(--muted)] hover:text-[var(--foreground)]"
-              >
-                源健康
-              </Link>
-            </nav>
-          </header>
-          <div
-            aria-hidden
-            className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-96"
-            style={{
-              background:
-                "radial-gradient(ellipse 60% 50% at 50% 0%, var(--accent-glow), transparent 70%)",
-            }}
-          />
-          {children}
+          {/* 赛博网格氛围背景 */}
+          <div aria-hidden className="cyber-grid-bg pointer-events-none fixed inset-0 -z-10" />
+          <NavSidebar />
+          <div className="pl-60">{children}</div>
         </Providers>
       </body>
     </html>

@@ -9,9 +9,10 @@ export default async function SourcesPage() {
   const health = await serverFetch<SourceHealthRead[]>("/api/sources/health");
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
+    <main className="mx-auto w-full max-w-7xl space-y-6 px-8 py-8">
       <div>
-        <h1 className="text-2xl font-bold">数据源健康</h1>
+        <p className="cyber-label">Uplink Status // Collectors</p>
+        <h1 className="neon-text mt-1 text-3xl font-bold tracking-wide">数据源健康</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
           连续失败 ≥3 轮的源会标红并产生告警通知（每 30 秒自动刷新）
         </p>

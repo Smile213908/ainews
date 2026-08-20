@@ -94,9 +94,9 @@ export default function SearchPanel() {
         <button
           type="submit"
           disabled={!query.trim() || task?.status === "running" || task?.status === "queued"}
-          className="rounded-lg bg-[var(--accent)] px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
+          className="neon-btn rounded-lg px-6 py-2.5 text-sm font-medium"
         >
-          全网搜索
+          ⚡ 全网搜索
         </button>
       </form>
 
@@ -126,7 +126,7 @@ export default function SearchPanel() {
             <button
               onClick={convertToKeyword}
               disabled={converted}
-              className="rounded-lg border border-[var(--accent)]/40 px-4 py-1.5 text-sm text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-40"
+              className="neon-btn rounded-lg px-4 py-1.5 text-sm"
             >
               {converted ? "✓ 已加入监控" : "+ 加入长期监控"}
             </button>
@@ -138,7 +138,7 @@ export default function SearchPanel() {
         {sorted.map((item) => (
           <article
             key={item.url}
-            className="rounded-xl border border-[var(--card-border)] bg-[var(--card)] p-4"
+            className="cyber-panel rounded-xl p-4"
           >
             <div className="flex items-center gap-2 text-xs">
               <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-zinc-300">
