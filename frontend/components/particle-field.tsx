@@ -22,8 +22,25 @@ type Particle = {
 };
 
 const MOUSE_RADIUS = 140; // 引力半径
-const MOUSE_FORCE = 0.16; // 引力强度（向光标靠拢比例）
 const EASE = 0.08; // 晃动缓动
+
+/** 粒子运行参数：由设置面板通过 CustomEvent 动态下发（particle-config） */
+export type ParticleConfig = {
+  density: number; // 粒子数量，0 = 关闭
+  force: number; // 引力强度（向光标靠拢比例）
+};
+
+export const DEFAULT_PARTICLE_CONFIG: ParticleConfig = { density: 140, force: 0.16 };
+
+export function loadParticleConfig(): ParticleConfig {
+  try {
+    const raw = localStorage.getItem("particle-config");
+    if (raw) return { ...DEFAULT_PARTICLE_CONFIG, ...JSON.parse(raw) };
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_PARTICLE_CONFIG;
+}
 
 export default function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -41,8 +58,11 @@ export default function ParticleField() {
     let w = 0;
     let h = 0;
     const mouse = { x: -9999, y: -9999 };
+    // 可变配置：滑杆实时改这里，不重建 effect
+    const config = { ...loadParticleConfig() };
 
-    const spawn = (count: number) => {
+    const spawn = () => {
+      const count = Math.min(config.density, 300);
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -56,6 +76,13 @@ export default function ParticleField() {
       }));
     };
 
+    const onConfig = (e: Event) => {
+      const next = (e as CustomEvent<ParticleConfig>).detail;
+      const densityChanged = next.density !== config.density;
+      Object.assign(config, next);
+      if (densityChanged) spawn(); // 密度变化重建粒子群
+    };
+
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = window.innerWidth;
@@ -65,7 +92,7 @@ export default function ParticleField() {
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      spawn(Math.min(Math.floor((w * h) / 14000), 160));
+      spawn();
     };
 
     const onMouse = (e: MouseEvent) => {
@@ -97,7 +124,7 @@ export default function ParticleField() {
         let tx = 0;
         let ty = 0;
         if (dist < MOUSE_RADIUS && dist > 0.01) {
-          const pull = (1 - dist / MOUSE_RADIUS) * MOUSE_FORCE;
+          const pull = (1 - dist / MOUSE_RADIUS) * config.force;
           tx = dx * pull;
           ty = dy * pull;
         }
@@ -125,6 +152,7 @@ export default function ParticleField() {
     resize();
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMouse);
+    window.addEventListener("particle-config", onConfig);
     document.documentElement.addEventListener("mouseleave", onLeave);
     raf = requestAnimationFrame(tick);
 
@@ -132,6 +160,7 @@ export default function ParticleField() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("particle-config", onConfig);
       document.documentElement.removeEventListener("mouseleave", onLeave);
     };
   }, []);
