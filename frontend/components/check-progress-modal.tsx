@@ -75,11 +75,19 @@ export default function CheckProgressModal({
       >
         {/* 头部 */}
         <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 py-4">
-          <div>
-            <p className="cyber-label">{running ? "Scanning //" : "Complete //"}</p>
-            <h2 className="neon-text mt-0.5 text-base font-semibold">
-              {running ? "热点检查进行中" : "本轮检查完成"}
-            </h2>
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt=""
+              className="h-9 w-9 rounded-lg shadow-[0_0_12px_rgba(0,229,255,0.3)]"
+            />
+            <div>
+              <p className="cyber-label">{running ? "Scanning //" : "Complete //"}</p>
+              <h2 className="neon-text mt-0.5 text-base font-semibold">
+                {running ? "热点检查进行中" : "本轮检查完成"}
+              </h2>
+            </div>
           </div>
           <button
             onClick={onClose}
