@@ -19,9 +19,12 @@ export default function NavSidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-[var(--card-border)] bg-[rgba(6,10,22,0.85)] backdrop-blur-xl">
       {/* Logo */}
       <Link href="/" className="group flex items-center gap-3 px-5 py-6">
-        <span className="cyber-dot flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--accent)]/50 text-lg text-[var(--accent)]">
-          ⚡
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo.png"
+          alt="hot-monitor logo"
+          className="h-10 w-10 rounded-lg shadow-[0_0_16px_rgba(0,229,255,0.35)] transition-shadow group-hover:shadow-[0_0_26px_rgba(0,229,255,0.6)]"
+        />
         <span>
           <span className="neon-text block text-base font-bold tracking-wide">
             hot-monitor
