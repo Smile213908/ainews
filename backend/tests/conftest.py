@@ -8,8 +8,14 @@ import os
 import tempfile
 
 _tmp_db = os.path.join(tempfile.gettempdir(), "hotmonitor_test.db")
-if os.path.exists(_tmp_db):
-    os.remove(_tmp_db)
+try:
+    if os.path.exists(_tmp_db):
+        os.remove(_tmp_db)
+except PermissionError:
+    # Windows 上旧文件可能被驻留进程占用；退化为本次运行唯一文件名
+    _tmp_db = os.path.join(
+        tempfile.gettempdir(), f"hotmonitor_test_{os.getpid()}.db"
+    )
 
 os.environ["API_KEYS"] = "test-key"
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp_db}"
@@ -27,10 +33,14 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
-from app.db import get_session
+from app.db import get_session, init_db
 from app.main import app
 
 AUTH = {"X-API-Key": "test-key"}
+
+# 文件型测试库的建表原本依赖 app 启动事件（仅 client fixture 触发），
+# 导致直接用 app.db.engine 的测试在单独运行时缺表。此处无条件建表，消除顺序依赖。
+init_db()
 
 
 @pytest.fixture(name="session")
