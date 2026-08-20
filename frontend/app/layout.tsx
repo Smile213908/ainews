@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NavSidebar from "@/components/nav-sidebar";
+import ParticleField from "@/components/particle-field";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
@@ -17,6 +18,8 @@ export default function RootLayout({
         <Providers>
           {/* 赛博网格氛围背景 */}
           <div aria-hidden className="cyber-grid-bg pointer-events-none fixed inset-0 -z-10" />
+          {/* 全局下落粒子 + 鼠标局部跟随 */}
+          <ParticleField />
           <NavSidebar />
           <div className="pl-60">{children}</div>
         </Providers>
